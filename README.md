@@ -1,0 +1,3 @@
+# GraphQL_React_TODO
+
+手を動かす学習として，GraphQLとReactを用いて最低限のTODOアプリを作成しました．
