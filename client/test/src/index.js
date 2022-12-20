@@ -17,31 +17,13 @@ const client = new ApolloClient({
   uri: "http://localhost:4000/graphql",
 });
 
-// ...ApolloClient instantiated here...
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Failed to find the root element");
+const root = ReactDOM.createRoot(rootElement);
 
-client
-  .query({
-    query: gql`
-      query getAll {
-        todoList {
-          id
-          text
-        }
-      }
-    `,
-  })
-  .then((result) => console.log(result));
-
-ReactDOM.render(
+root.render(
   <ApolloProvider client={client}>
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  </ApolloProvider>,
-  document.getElementById("root")
+    <App />
+  </ApolloProvider>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
