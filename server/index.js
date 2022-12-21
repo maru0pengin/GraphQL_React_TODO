@@ -33,7 +33,7 @@ const typeDefs = gql`
     text: String
   }
   type Mutation {
-    createTodo(text: String): Boolean
+    createTodo(text: String): todo
     deleteTodo(id: ID!): Boolean
     updateTodo(id: ID!, text: String): Boolean
   }
@@ -51,7 +51,7 @@ class TodoListAPI extends DataSource {
   }
   async createTodo({ text: text }) {
     const todo = await this.store.todoList.findOrCreate({ where: { text } });
-    return !!todo;
+    return todo[0];
   }
   async updateTodo({ id: id, text: text }) {
     const updateTodo = await this.store.todoList.update(
@@ -86,7 +86,8 @@ const resolvers = {
   },
   Mutation: {
     createTodo: async (_, { text }, { dataSources }) => {
-      return !!(await dataSources.todoListAPI.createTodo({ text }));
+      const todo = await dataSources.todoListAPI.createTodo({ text });
+      return todo;
     },
     deleteTodo: async (_, { id }, { dataSources }) => {
       return !!(await dataSources.todoListAPI.deleteTodo({ id }));
