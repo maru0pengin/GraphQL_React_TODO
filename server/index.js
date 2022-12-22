@@ -3,6 +3,22 @@ const { gql } = require("apollo-server");
 const { DataSource } = require("apollo-datasource");
 const { Sequelize, DataTypes } = require("sequelize");
 
+// スキーマの定義 ----------
+const typeDefs = gql`
+  type Query {
+    todoList: [todo]
+  }
+  type Mutation {
+    createTodo(text: String): todo
+    deleteTodo(id: ID!): Boolean
+    updateTodo(id: ID!, text: String): Boolean
+  }
+  type todo {
+    id: ID!
+    text: String
+  }
+`;
+
 // DBの初期化--------------
 const createStore = () => {
   const db = new Sequelize({
@@ -12,7 +28,7 @@ const createStore = () => {
 
   const todoList = db.define("todo", {
     id: {
-      type: Sequelize.INTEGER,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
@@ -21,24 +37,8 @@ const createStore = () => {
   return { db, todoList };
 };
 const store = createStore();
-// -----------------------
-
-// スキーマの定義 ----------
-const typeDefs = gql`
-  type Query {
-    todoList: [todo]
-  }
-  type todo {
-    id: ID!
-    text: String
-  }
-  type Mutation {
-    createTodo(text: String): todo
-    deleteTodo(id: ID!): Boolean
-    updateTodo(id: ID!, text: String): Boolean
-  }
-`;
-// -----------------------
+// tableの作成
+store.todoList.sync();
 
 // データとの繋ぎ込み -------
 class TodoListAPI extends DataSource {
@@ -56,11 +56,7 @@ class TodoListAPI extends DataSource {
   async updateTodo({ id: id, text: text }) {
     const updateTodo = await this.store.todoList.update(
       { text: text },
-      {
-        where: {
-          id: id,
-        },
-      }
+      { where: { id: id } }
     );
     return !!updateTodo;
   }
@@ -71,23 +67,18 @@ class TodoListAPI extends DataSource {
     return !!todo;
   }
   async getTodoList() {
-    const todoList = await this.store.todoList.findAll();
-    return todoList;
+    return await this.store.todoList.findAll();
   }
 }
-// -----------------------
-
 // リゾルバの定義 ----------
 const resolvers = {
   Query: {
     todoList: async (_, __, { dataSources }) =>
       dataSources.todoListAPI.getTodoList(),
-    // todoList: () => sampleTodoList,
   },
   Mutation: {
     createTodo: async (_, { text }, { dataSources }) => {
-      const todo = await dataSources.todoListAPI.createTodo({ text });
-      return todo;
+      return await dataSources.todoListAPI.createTodo({ text });
     },
     deleteTodo: async (_, { id }, { dataSources }) => {
       return !!(await dataSources.todoListAPI.deleteTodo({ id }));
@@ -97,7 +88,6 @@ const resolvers = {
     },
   },
 };
-// -----------------------
 
 // ApolloServerのインスタンス作成
 const server = new ApolloServer({
@@ -107,7 +97,6 @@ const server = new ApolloServer({
     todoListAPI: new TodoListAPI({ store }),
   }),
 });
-
 // サーバーを走らせる
 server.listen().then(({ url }) => {
   console.log(`立ち上がったよ！${url}`);
