@@ -28,7 +28,6 @@ const CREATE_TODO = gql`
     }
   }
 `;
-
 function App() {
   const { data } = useQuery(GET_TODOLIST);
   const [addTodo] = useMutation(CREATE_TODO);
@@ -151,6 +150,11 @@ function App() {
         onChange={handleCreateChange}
         onKeyPress={handleCreateEnter}
       />
+      {todoList?.length === 0 ? (
+        <img src={"./GraphQL_2.png"} width="200"></img>
+      ) : (
+        <img src={"./GraphQL_1.png"} width="200"></img>
+      )}
     </div>
   );
 }
